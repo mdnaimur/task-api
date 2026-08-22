@@ -15,36 +15,33 @@ function sendJson(res, statusCode, data) {
   res.end(JSON.stringify(data));
 }
 
+addRoute("GET", "/health", (req, res) => {
+  sendJson(res, 200, {
+    status: "ok",
+    service: "Task Management API",
+  });
+});
+
+addRoute("GET", "/about", (req, res) => {
+  sendJson(res, 200, {
+    name: "Task Management API",
+    version: "1.0.0",
+  });
+});
+
 function requestHandler(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
-  const page = url.searchParams.get("page");
-  console.log("page", page);
-  console.log(`Path name: ${url.pathname}`);
-  //   console.log(`Headers details: ${req.headers}`);
-  //   console.log("Headers:", JSON.stringify(req.headers, null, 2));
-  //   console.log(`query: ${url.searchParams.toString()}`);
-  //   console.log("Method", req.method);
-  console.log("URL", req.url);
-  if (req.method === "GET" && url.pathname === "/health") {
-    sendJson(res, 200, {
-      status: "ok",
-      service: "Task Management API",
-    });
+  const route = findRoute(req.method, url.pathname);
+  console.log(`${JSON.stringify(route.handler)}`);
 
-    return;
-  }
-
-  if (req.method === "GET" && req.url === "/about") {
-    sendJson(res, 200, {
-      name: "Task manage API: about page",
-      version: "1.0.0",
+  if (!route) {
+    sendJson(res, 404, {
+      error: "NOT FOUND",
     });
     return;
   }
 
-  sendJson(res, 400, {
-    error: "not found",
-  });
+  route.handler(req, res);
 }
 
 module.exports = requestHandler;

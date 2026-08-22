@@ -7,7 +7,7 @@
 
 // code module import
 const { URL } = require("node:url");
-const { addRoute, findRoute } = require("./router");
+const { addRoute, findRoute, findPath } = require("./router");
 
 function sendJson(res, statusCode, data) {
   res.statusCode = statusCode;
@@ -29,19 +29,73 @@ addRoute("GET", "/about", (req, res) => {
   });
 });
 
+addRoute("GET", "/tasks/:id", (req, res, params) => {
+  sendJson(res, 200, {
+    message: "Task found",
+    id: params.id,
+  });
+});
+
+addRoute("GET", "/tasks", (req, res, { query }) => {
+  const page = query.get("page");
+  const status = query.get("status");
+  console.log(`query rotue check page = ${page} and status = ${status}`);
+
+  sendJson(res, 200, {
+    page,
+    status,
+  });
+});
+
+addRoute("GET", "/tasks", (req, res) => {
+  sendJson(res, 200, {
+    message: "Get tasks",
+  });
+});
+
+addRoute("POST", "/tasks", (req, res) => {
+  sendJson(res, 200, {
+    message: "Create tasks ",
+  });
+});
+
+addRoute("PUT", "/tasks/:id", (req, res, params) => {
+  sendJson(res, 200, {
+    message: "updated successfully",
+  });
+});
+
+addRoute("PUT", "/tasks/:id", (req, res, params) => {
+  sendJson(res, 200, {
+    message: "Deleted successfully",
+  });
+});
+// handle request
+
 function requestHandler(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const route = findRoute(req.method, url.pathname);
-  console.log(`${JSON.stringify(route.handler)}`);
+  //   console.log(`${JSON.stringify(route.handler)}`);
 
-  if (!route) {
-    sendJson(res, 404, {
-      error: "NOT FOUND",
+  if (route) {
+    route.handler(req, res, {
+      params: route.params,
+      query: url.searchParams,
+    });
+
+    return;
+  }
+
+  if (findPath(url.pathname)) {
+    sendJson(res, 405, {
+      error: "Method not allowd",
     });
     return;
   }
 
-  route.handler(req, res);
+  sendJson(res, 404, {
+    error: "NOT FOUND",
+  });
 }
 
 module.exports = requestHandler;

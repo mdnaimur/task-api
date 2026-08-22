@@ -8,6 +8,7 @@
 // code module import
 const { URL } = require("node:url");
 const { addRoute, findRoute, findPath } = require("./router");
+const parseJsonBody = require("./bodyParser");
 
 function sendJson(res, statusCode, data) {
   res.statusCode = statusCode;
@@ -53,10 +54,22 @@ addRoute("GET", "/tasks", (req, res) => {
   });
 });
 
-addRoute("POST", "/tasks", (req, res) => {
-  sendJson(res, 200, {
-    message: "Create tasks ",
-  });
+addRoute("POST", "/tasks", async (req, res) => {
+  try {
+    const body = await parseJsonBody(req);
+    sendJson(res, 201, {
+      message: "Task received",
+      task: body,
+    });
+  } catch (error) {
+    sendJson(res, 400, {
+      error: `invalid json error: ${error}`,
+    });
+  }
+
+  //   sendJson(res, 200, {
+  //     message: "Create tasks ",
+  //   });
 });
 
 addRoute("PUT", "/tasks/:id", (req, res, params) => {
@@ -72,7 +85,7 @@ addRoute("PUT", "/tasks/:id", (req, res, params) => {
 });
 // handle request
 
-function requestHandler(req, res) {
+async function requestHandler(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const route = findRoute(req.method, url.pathname);
   //   console.log(`${JSON.stringify(route.handler)}`);

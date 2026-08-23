@@ -5,7 +5,9 @@
  * Date: 22/08/2026
  */
 
-const {} = require("./errors");
+const { AppError } = require("./errors");
+
+const MAX_BODY_SIZE = 1024 * 1024;
 
 function parseJsonBody(req) {
   const contentType = req.headers["content-type"];
@@ -18,6 +20,11 @@ function parseJsonBody(req) {
 
     req.on("data", (chunk) => {
       body += chunk;
+
+      if (Buffer.byteLength(body, "utf8") > MAX_BODY_SIZE) {
+        req.destroy();
+        reject(new AppError(413, "Request body is too large"));
+      }
     });
 
     req.on("end", () => {

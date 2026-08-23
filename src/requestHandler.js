@@ -13,6 +13,14 @@ const parseJsonBody = require("./bodyParser");
 const { validateTask, validateTaskUpdate } = require("./validators");
 const { readTasks, writeTasks } = require("./taskRepository");
 
+const {
+  createTask,
+  deleteTask,
+  getTaskById,
+  getTasks,
+  updateTask,
+} = require("./services/taskService");
+
 const { AppError } = require("./errors");
 
 const errorHandler = require("./errorHandler");
@@ -38,49 +46,17 @@ addRoute("GET", "/about", (req, res) => {
 });
 
 addRoute("GET", "/tasks/:id", async (req, res, { params }) => {
-  try {
-    const tasks = await readTasks();
-    // console.log(tasks);
-    // console.log(Array.isArray(tasks));
-    console.log(params);
-    console.log(params.id);
-    const task = tasks.find((task) => task.id === params.id);
-
-    if (!task) {
-      throw new AppError(404, "Task not found");
-    }
-
-    sendJson(res, 200, task);
-  } catch (error) {
-    sendJson(res, 500, {
-      error: `Internal Server Error: ${error}`,
-      details: error.message,
-      stack: error.stack,
-    });
+  const task = await getTaskById(params.id);
+  if (!task) {
+    throw new AppError(404, "Task not found");
   }
+  sendJson(res, 200, task);
 });
 
-// addRoute("GET", "/tasks", (req, res, { query }) => {
-//   const page = query.get("page");
-//   const status = query.get("status");
-//   console.log(`query rotue check page = ${page} and status = ${status}`);
-
-//   sendJson(res, 200, {
-//     page,
-//     status,
-//   });
-// });
-
 addRoute("GET", "/tasks", async (req, res) => {
-  try {
-    const tasks = await readTasks();
+  const tasks = await getTasks();
 
-    sendJson(res, 200, tasks);
-  } catch (error) {
-    sendJson(res, 500, {
-      error: `Internal Server Error\n details: ${error}`,
-    });
-  }
+  sendJson(res, 200, tasks);
 });
 
 addRoute("POST", "/tasks", async (req, res) => {
@@ -127,74 +103,31 @@ addRoute("PUT", "/tasks/:id", (req, res, { params }) => {
 });
 
 addRoute("PATCH", "/tasks/:id", async (req, res, { params }) => {
-  try {
-    const body = await parseJsonBody(req);
-    console.log(`[body] inside patch: ${body}`);
-    const errors = validateTaskUpdate(body);
-    console.log(`[err] inside patch: ${errors}`);
+  const body = await parseJsonBody(req);
+  const errors = validateTaskUpdate(body);
 
-    if (Object.keys(errors).length > 0) {
-      sendJson(res, 400, {
-        error: "validation failed",
-        details: errors,
-      });
-      return;
-    }
-
-    const tasks = await readTasks();
-
-    const task = tasks.find((task) => task.id === params.id);
-
-    if (!task) {
-      sendJson(res, 404, {
-        error: "Task not found",
-      });
-      return;
-    }
-
-    if (body.title !== undefined) {
-      task.title = body.title.trim();
-    }
-    if (body.completed !== undefined) {
-      task.completed = body.completed;
-    }
-
-    await writeTasks(tasks);
-
-    sendJson(res, 200, task);
-  } catch (error) {
-    return sendJson(res, 500, {
-      error: `Internet server error: ${error}`,
-      details: error.message,
-      stack: error.stack,
+  if (Object.keys(errors).length > 0) {
+    sendJson(res, 400, {
+      error: "validation failed",
+      details: errors,
     });
+    return;
   }
+  const task = await updateTask(params.id, body);
+  if (!task) {
+    throw new AppError(404, "Task not found");
+  }
+  sendJson(res, 200, task);
 });
 
 addRoute("DELETE", "/tasks/:id", async (req, res, { params }) => {
-  try {
-    const tasks = await readTasks();
-    const taskIndex = tasks.findIndex((task) => task.id === params.id);
+  const taskDelete = await deleteTask(params.id);
 
-    if (taskIndex === -1) {
-      (task) => task.id === params.id;
-      sendJson(res, 404, {
-        error: "task not found",
-      });
-      return;
-    }
-
-    tasks.splice(taskIndex, 1);
-    await writeTasks(tasks);
-    res.statusCode = 204;
-    res.end("Deleted successfully");
-  } catch (error) {
-    return sendJson(res, 500, {
-      error: `Internet server error: ${error}`,
-      details: error.message,
-      stack: error.stack,
-    });
+  if (!taskDelete) {
+    throw new AppError(404, "Task not found");
   }
+  res.statusCode = 204;
+  res.end();
 });
 // handle request
 

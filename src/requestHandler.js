@@ -15,6 +15,8 @@ const { readTasks, writeTasks } = require("./taskRepository");
 
 const { AppError } = require("./errors");
 
+const errorHandler = require("./errorHandler");
+
 function sendJson(res, statusCode, data) {
   res.statusCode = statusCode;
   res.setHeader("Content-Type", "application/json");
@@ -45,10 +47,7 @@ addRoute("GET", "/tasks/:id", async (req, res, { params }) => {
     const task = tasks.find((task) => task.id === params.id);
 
     if (!task) {
-      sendJson(res, 404, {
-        error: "task not found",
-      });
-      return;
+      throw new AppError(404, "Task not found");
     }
 
     sendJson(res, 200, task);
@@ -200,29 +199,32 @@ addRoute("DELETE", "/tasks/:id", async (req, res, { params }) => {
 // handle request
 
 async function requestHandler(req, res) {
-  const url = new URL(req.url, `http://${req.headers.host}`);
-  const route = findRoute(req.method, url.pathname);
-  //   console.log(`${JSON.stringify(route.handler)}`);
+  try {
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const route = findRoute(req.method, url.pathname);
+    //   console.log(`${JSON.stringify(route.handler)}`);
 
-  if (route) {
-    route.handler(req, res, {
-      params: route.params,
-      query: url.searchParams,
+    if (route) {
+      await route.handler(req, res, {
+        params: route.params,
+        query: url.searchParams,
+      });
+
+      return;
+    }
+
+    if (findPath(url.pathname)) {
+      sendJson(res, 405, {
+        error: "Method not allowd",
+      });
+      return;
+    }
+
+    sendJson(res, 404, {
+      error: "NOT FOUND",
     });
-
-    return;
+  } catch (error) {
+    errorHandler(error, res);
   }
-
-  if (findPath(url.pathname)) {
-    sendJson(res, 405, {
-      error: "Method not allowd",
-    });
-    return;
-  }
-
-  sendJson(res, 404, {
-    error: "NOT FOUND",
-  });
 }
-
 module.exports = requestHandler;

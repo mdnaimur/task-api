@@ -5,7 +5,14 @@
  * Date: 22/08/2026
  */
 
+const {} = require("./errors");
+
 function parseJsonBody(req) {
+  const contentType = req.headers["content-type"];
+
+  if (!contentType || !contentType.startsWith("application/json")) {
+    throw new AppError(415, "Content type must be application/json");
+  }
   return new Promise((resolve, reject) => {
     let body = "";
 

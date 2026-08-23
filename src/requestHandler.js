@@ -10,6 +10,8 @@ const { URL } = require("node:url");
 const { addRoute, findRoute, findPath } = require("./router");
 const parseJsonBody = require("./bodyParser");
 
+const { validateTask } = require("./validators");
+
 function sendJson(res, statusCode, data) {
   res.statusCode = statusCode;
   res.setHeader("Content-Type", "application/json");
@@ -57,6 +59,18 @@ addRoute("GET", "/tasks", (req, res) => {
 addRoute("POST", "/tasks", async (req, res) => {
   try {
     const body = await parseJsonBody(req);
+    console.log("[body] Inside request hanlder post - task", body);
+    const errors = validateTask(body);
+    console.log("[errors ]Inside request hanlder post - task", body);
+
+    if (Object.keys(errors).length > 0) {
+      sendJson(res, 400, {
+        error: "Validation failed \n",
+        details: errors,
+      });
+      return;
+    }
+
     sendJson(res, 201, {
       message: "Task received",
       task: body,

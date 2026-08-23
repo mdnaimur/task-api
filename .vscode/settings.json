@@ -8,8 +8,8 @@
   "editor.fontLigatures": true,
   "editor.fontSize": 18,
   "editor.fontWeight": "400",
-  "editor.lineHeight": 24,
-  "editor.letterSpacing": 0.5,
+  "editor.lineHeight": 28,
+  "editor.letterSpacing": 0.7,
 
   "editor.semanticHighlighting.enabled": true,
   "editor.semanticTokenColorCustomizations": {
@@ -31,8 +31,8 @@
   "editor.cursorBlinking": "smooth",
   "editor.smoothScrolling": true,
 
-  "editor.padding.top": 10,
-  "editor.padding.bottom": 10,
+  "editor.padding.top": 12,
+  "editor.padding.bottom": 12,
 
   "editor.renderWhitespace": "selection",
   "editor.renderLineHighlight": "all",

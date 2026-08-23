@@ -21,6 +21,24 @@ function validateTask(data) {
   return errors;
 }
 
+function validateTaskUpdate(data) {
+  const errors = {};
+
+  if (
+    data.title !== undefined &&
+    (typeof data.title !== "string" || data.title.trim() === "")
+  ) {
+    errors.title = "title must be non empty string";
+  }
+
+  if (data.completed !== undefined && typeof data.completed !== "boolean") {
+    errors.completed = "Completed must be a boolean";
+  }
+
+  return errors;
+}
+
 module.exports = {
   validateTask,
+  validateTaskUpdate,
 };

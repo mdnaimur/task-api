@@ -10,7 +10,10 @@ const { URL } = require("node:url");
 const { addRoute, findRoute, findPath } = require("./router");
 const parseJsonBody = require("./bodyParser");
 
-const { validateTask } = require("./validators");
+const { validateTask, validateTaskUpdate } = require("./validators");
+const { readTasks, writeTasks } = require("./taskRepository");
+
+const { AppError } = require("./errors");
 
 function sendJson(res, statusCode, data) {
   res.statusCode = statusCode;
@@ -32,28 +35,53 @@ addRoute("GET", "/about", (req, res) => {
   });
 });
 
-addRoute("GET", "/tasks/:id", (req, res, params) => {
-  sendJson(res, 200, {
-    message: "Task found",
-    id: params.id,
-  });
+addRoute("GET", "/tasks/:id", async (req, res, { params }) => {
+  try {
+    const tasks = await readTasks();
+    // console.log(tasks);
+    // console.log(Array.isArray(tasks));
+    console.log(params);
+    console.log(params.id);
+    const task = tasks.find((task) => task.id === params.id);
+
+    if (!task) {
+      sendJson(res, 404, {
+        error: "task not found",
+      });
+      return;
+    }
+
+    sendJson(res, 200, task);
+  } catch (error) {
+    sendJson(res, 500, {
+      error: `Internal Server Error: ${error}`,
+      details: error.message,
+      stack: error.stack,
+    });
+  }
 });
 
-addRoute("GET", "/tasks", (req, res, { query }) => {
-  const page = query.get("page");
-  const status = query.get("status");
-  console.log(`query rotue check page = ${page} and status = ${status}`);
+// addRoute("GET", "/tasks", (req, res, { query }) => {
+//   const page = query.get("page");
+//   const status = query.get("status");
+//   console.log(`query rotue check page = ${page} and status = ${status}`);
 
-  sendJson(res, 200, {
-    page,
-    status,
-  });
-});
+//   sendJson(res, 200, {
+//     page,
+//     status,
+//   });
+// });
 
-addRoute("GET", "/tasks", (req, res) => {
-  sendJson(res, 200, {
-    message: "Get tasks",
-  });
+addRoute("GET", "/tasks", async (req, res) => {
+  try {
+    const tasks = await readTasks();
+
+    sendJson(res, 200, tasks);
+  } catch (error) {
+    sendJson(res, 500, {
+      error: `Internal Server Error\n details: ${error}`,
+    });
+  }
 });
 
 addRoute("POST", "/tasks", async (req, res) => {
@@ -71,13 +99,20 @@ addRoute("POST", "/tasks", async (req, res) => {
       return;
     }
 
-    sendJson(res, 201, {
-      message: "Task received",
-      task: body,
-    });
+    const tasks = await readTasks();
+
+    const task = {
+      id: Date.now().toString(),
+      title: body.title.trim(),
+      completed: body.completed ?? false,
+    };
+    tasks.push(task);
+
+    await writeTasks(tasks);
+    return sendJson(res, 201, task);
   } catch (error) {
-    sendJson(res, 400, {
-      error: `invalid json error: ${error}`,
+    return sendJson(res, 500, {
+      error: `Internet server error: ${error}`,
     });
   }
 
@@ -86,16 +121,81 @@ addRoute("POST", "/tasks", async (req, res) => {
   //   });
 });
 
-addRoute("PUT", "/tasks/:id", (req, res, params) => {
+addRoute("PUT", "/tasks/:id", (req, res, { params }) => {
   sendJson(res, 200, {
     message: "updated successfully",
   });
 });
 
-addRoute("PUT", "/tasks/:id", (req, res, params) => {
-  sendJson(res, 200, {
-    message: "Deleted successfully",
-  });
+addRoute("PATCH", "/tasks/:id", async (req, res, { params }) => {
+  try {
+    const body = await parseJsonBody(req);
+    console.log(`[body] inside patch: ${body}`);
+    const errors = validateTaskUpdate(body);
+    console.log(`[err] inside patch: ${errors}`);
+
+    if (Object.keys(errors).length > 0) {
+      sendJson(res, 400, {
+        error: "validation failed",
+        details: errors,
+      });
+      return;
+    }
+
+    const tasks = await readTasks();
+
+    const task = tasks.find((task) => task.id === params.id);
+
+    if (!task) {
+      sendJson(res, 404, {
+        error: "Task not found",
+      });
+      return;
+    }
+
+    if (body.title !== undefined) {
+      task.title = body.title.trim();
+    }
+    if (body.completed !== undefined) {
+      task.completed = body.completed;
+    }
+
+    await writeTasks(tasks);
+
+    sendJson(res, 200, task);
+  } catch (error) {
+    return sendJson(res, 500, {
+      error: `Internet server error: ${error}`,
+      details: error.message,
+      stack: error.stack,
+    });
+  }
+});
+
+addRoute("DELETE", "/tasks/:id", async (req, res, { params }) => {
+  try {
+    const tasks = await readTasks();
+    const taskIndex = tasks.findIndex((task) => task.id === params.id);
+
+    if (taskIndex === -1) {
+      (task) => task.id === params.id;
+      sendJson(res, 404, {
+        error: "task not found",
+      });
+      return;
+    }
+
+    tasks.splice(taskIndex, 1);
+    await writeTasks(tasks);
+    res.statusCode = 204;
+    res.end("Deleted successfully");
+  } catch (error) {
+    return sendJson(res, 500, {
+      error: `Internet server error: ${error}`,
+      details: error.message,
+      stack: error.stack,
+    });
+  }
 });
 // handle request
 

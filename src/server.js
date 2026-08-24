@@ -10,15 +10,10 @@ const config = require("./config");
 const http = require("node:http");
 
 // custom import
-const requestHandler = require("./requestHandler");
-const { addRoute } = require("./router");
-const registerRoutes = require("./routes");
 
-registerRoutes(addRoute);
+const app = require("./app");
 
-const server = http.createServer(requestHandler);
+const server = http.createServer(app);
 server.listen(config.port, () => {
   console.log(`Server running on port ${config.port}`);
 });
-
-

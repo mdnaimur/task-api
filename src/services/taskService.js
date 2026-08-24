@@ -5,74 +5,50 @@
  * Date: 23/08/2026
  */
 
-const { readTasks, writeTasks } = require("../taskRepository");
+function createTaskService(taskRepository) {
+  async function createTask(data) {
+    const task = {
+      id: Date.now().toString(),
+      title: data.title.trim(),
+      completed: data.completed ?? false,
+    };
 
-async function createTask(data) {
-  const tasks = await readTasks();
+    return taskRepository.create(task);
+  }
 
-  const task = {
-    id: Date.now().toString(),
-    title: data.title.trim(),
-    completed: data.completed ?? false,
+  async function getTasks() {
+    return taskRepository.findAll();
+  }
+
+  async function getTaskById(id) {
+    return taskRepository.findById(id);
+  }
+
+  async function updateTask(id, data) {
+    const changes = {};
+
+    if (data.title !== undefined) {
+      changes.title = data.title.trim();
+    }
+
+    if (data.completed !== undefined) {
+      changes.completed = data.completed;
+    }
+
+    return taskRepository.update(id, changes);
+  }
+
+  async function deleteTask(id) {
+    return taskRepository.remove(id);
+  }
+
+  return {
+    createTask,
+    getTaskById,
+    getTasks,
+    updateTask,
+    deleteTask,
   };
-
-  tasks.push(task);
-  await writeTasks(tasks);
-
-  return task;
 }
 
-async function getTasks() {
-  return await readTasks();
-}
-
-async function getTaskById(id) {
-  const tasks = await readTasks();
-
-  return tasks.find((task) => task.id === id) || null;
-}
-
-async function updateTask(id, data) {
-  const tasks = await readTasks();
-  const task = tasks.find((task) => task.id === id);
-
-  if (!task) {
-    return null;
-  }
-
-  if (data.title !== undefined) {
-    task.title = data.title.trim();
-  }
-
-  if (data.completed !== undefined) {
-    task.completed = data.completed;
-  }
-
-  await writeTasks(tasks);
-
-  return task;
-}
-
-async function deleteTask(id) {
-  const tasks = await readTasks();
-
-  const index = tasks.findIndex((task) => task.id === id);
-
-  if (index === -1) {
-    return false;
-  }
-
-  tasks.splice(index, 1);
-
-  await writeTasks(tasks);
-
-  return true;
-}
-
-module.exports = {
-  createTask,
-  getTaskById,
-  getTasks,
-  updateTask,
-  deleteTask,
-};
+module.exports = createTaskService;

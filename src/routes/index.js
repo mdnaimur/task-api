@@ -7,8 +7,8 @@
 
 const registerTaskRoute = require("./taskRoutes");
 
-function registerRoutes(addRoute) {
-  registerTaskRoute(addRoute);
+function registerRoutes(addRoute, { taskController }) {
+  registerTaskRoute(addRoute, { taskController });
 }
 
 module.exports = registerRoutes;

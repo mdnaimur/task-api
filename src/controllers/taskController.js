@@ -18,76 +18,80 @@ const parseJsonBody = require("../bodyParser");
 const { AppError } = require("../errors");
 const { sendJson } = require("../utils/http");
 
-async function createTaskController(req, res) {
-  const body = await parseJsonBody(req);
+function createTaskController(taskService) {
+  async function createTaskController(req, res) {
+    const body = await parseJsonBody(req);
 
-  const errors = validateTask(body);
+    const errors = validateTask(body);
 
-  if (Object.keys(errors).length > 0) {
-    sendJson(res, 400, {
-      error: "Validation failed",
-      details: errors,
-    });
+    if (Object.keys(errors).length > 0) {
+      sendJson(res, 400, {
+        error: "Validation failed",
+        details: errors,
+      });
 
-    return;
+      return;
+    }
+
+    const task = await createTask(body);
+
+    sendJson(res, 201, task);
   }
 
-  const task = await createTask(body);
+  async function getTasksController(req, res) {
+    const tasks = await getTasks();
 
-  sendJson(res, 201, task);
-}
-
-async function getTasksController(req, res) {
-  const tasks = await getTasks();
-
-  sendJson(res, 200, tasks);
-}
-
-async function getTaskCotroller(req, res, { params }) {
-  const task = await getTaskById(params.id);
-
-  if (!task) {
-    throw new AppError(404, "Task not found");
+    sendJson(res, 200, tasks);
   }
 
-  sendJson(res, 200, task);
-}
+  async function getTaskCotroller(req, res, { params }) {
+    const task = await getTaskById(params.id);
 
-async function updateTaskController(req, res, { params }) {
-  const body = await parseJsonBody(req);
-  const errors = validateTaskUpdate(body);
+    if (!task) {
+      throw new AppError(404, "Task not found");
+    }
 
-  if (Object.keys(errors).length > 0) {
-    sendJson(res, 400, {
-      error: "Validation error",
-      details: errors,
-    });
-
-    return;
+    sendJson(res, 200, task);
   }
 
-  const task = await updateTask(params.id, body);
-  if (!task) {
-    throw new AppError(404, "Task not found");
+  async function updateTaskController(req, res, { params }) {
+    const body = await parseJsonBody(req);
+    const errors = validateTaskUpdate(body);
+
+    if (Object.keys(errors).length > 0) {
+      sendJson(res, 400, {
+        error: "Validation error",
+        details: errors,
+      });
+
+      return;
+    }
+
+    const task = await updateTask(params.id, body);
+    if (!task) {
+      throw new AppError(404, "Task not found");
+    }
+
+    sendJson(res, 200, task);
   }
 
-  sendJson(res, 200, task);
-}
+  async function deleteTaskController(req, res, { params }) {
+    const deleted = await deleteTask(params.id);
+    if (!deleted) {
+      throw new AppError(404, "Task not found");
+    }
 
-async function deleteTaskController(req, res, { params }) {
-  const deleted = await deleteTask(params.id);
-  if (!deleted) {
-    throw new AppError(404, "Task not found");
+    res.statusCode = 204;
+    res.end();
   }
 
-  res.statusCode = 204;
-  res.end();
+  return {
+    createTaskController,
+    getTaskCotroller,
+    getTasksController,
+    updateTaskController,
+    deleteTaskController,
+  };
 }
 
-module.exports = {
-  createTaskController,
-  getTaskCotroller,
-  getTasksController,
-  updateTaskController,
-  deleteTaskController,
-};
+module.exports = createTaskController;

@@ -5,68 +5,42 @@
  * Date: 23/08/2026
  */
 
-const { readTasks, writeTasks } = require("../taskRepository");
+const taskRepository = require("../taskRepository");
 
 async function createTask(data) {
-  const tasks = await readTasks();
-
   const task = {
     id: Date.now().toString(),
     title: data.title.trim(),
     completed: data.completed ?? false,
   };
 
-  tasks.push(task);
-  await writeTasks(tasks);
-
-  return task;
+  return taskRepository.create(task);
 }
 
 async function getTasks() {
-  return await readTasks();
+  return taskRepository.findAll();
 }
 
 async function getTaskById(id) {
-  const tasks = await readTasks();
-
-  return tasks.find((task) => task.id === id) || null;
+  return taskRepository.findById(id);
 }
 
 async function updateTask(id, data) {
-  const tasks = await readTasks();
-  const task = tasks.find((task) => task.id === id);
-
-  if (!task) {
-    return null;
-  }
+  const changes = {};
 
   if (data.title !== undefined) {
-    task.title = data.title.trim();
+    changes.title = data.title.trim();
   }
 
   if (data.completed !== undefined) {
-    task.completed = data.completed;
+    changes.completed = data.completed;
   }
 
-  await writeTasks(tasks);
-
-  return task;
+  return taskRepository.update(id, changes);
 }
 
 async function deleteTask(id) {
-  const tasks = await readTasks();
-
-  const index = tasks.findIndex((task) => task.id === id);
-
-  if (index === -1) {
-    return false;
-  }
-
-  tasks.splice(index, 1);
-
-  await writeTasks(tasks);
-
-  return true;
+  return taskRepository.remove(id);
 }
 
 module.exports = {

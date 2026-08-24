@@ -33,19 +33,19 @@ function createTaskController(taskService) {
       return;
     }
 
-    const task = await createTask(body);
+    const task = await taskService.createTask(body);
 
     sendJson(res, 201, task);
   }
 
   async function getTasksController(req, res) {
-    const tasks = await getTasks();
+    const tasks = await taskService.getTasks();
 
     sendJson(res, 200, tasks);
   }
 
   async function getTaskCotroller(req, res, { params }) {
-    const task = await getTaskById(params.id);
+    const task = await taskService.getTaskById(params.id);
 
     if (!task) {
       throw new AppError(404, "Task not found");
@@ -67,7 +67,7 @@ function createTaskController(taskService) {
       return;
     }
 
-    const task = await updateTask(params.id, body);
+    const task = await taskService.updateTask(params.id, body);
     if (!task) {
       throw new AppError(404, "Task not found");
     }
@@ -76,7 +76,7 @@ function createTaskController(taskService) {
   }
 
   async function deleteTaskController(req, res, { params }) {
-    const deleted = await deleteTask(params.id);
+    const deleted = await taskService.deleteTask(params.id);
     if (!deleted) {
       throw new AppError(404, "Task not found");
     }

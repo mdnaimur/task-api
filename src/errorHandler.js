@@ -10,13 +10,19 @@ const { sendJson } = require("./utils/http");
 
 function errorHandler(error, res) {
   if (error instanceof AppError) {
+    //    if (error.isOperational)
     sendJson(res, error.statusCode, {
       error: error.message,
     });
     return;
   }
 
-  console.error(error);
+  // console.error(error);
+      logger.error("Unexpected error", {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+    });
 
   sendJson(res, 500, {
     error: "Internal Server Error",

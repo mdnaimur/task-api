@@ -11,12 +11,14 @@ const http = require("node:http");
 
 // custom import
 const requestHandler = require("./requestHandler");
+const { addRoute } = require("./router");
+const registerRoutes = require("./routes");
 
-function start() {
-  const server = http.createServer(requestHandler);
-  server.listen(config.port, () => {
-    console.log(`Server running on port ${config.port}`);
-  });
-}
+registerRoutes(addRoute);
 
-start();
+const server = http.createServer(requestHandler);
+server.listen(config.port, () => {
+  console.log(`Server running on port ${config.port}`);
+});
+
+

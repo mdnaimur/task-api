@@ -1,15 +1,11 @@
-const fs = require("node:fs");
+const { hashPassword } = require("./utils/password");
 
-const stream = fs.createReadStream("data/tasks.json");
+async function main() {
+  const hash1 = await hashPassword("hello123");
+  const hash2 = await hashPassword("hello123");
 
-stream.on("data", (chunk) => {
-  console.log("Received:", chunk.length, "bytes");
-});
+  console.log(hash1);
+  console.log(hash2);
+}
 
-stream.on("end", () => {
-  console.log("Finished reading");
-});
-
-stream.on("error", (error) => {
-  console.error("Read error:", error);
-});
+main();

@@ -2,6 +2,7 @@
   "workbench.colorTheme": "Night Owl",
   "workbench.iconTheme": "material-icon-theme",
   "workbench.startupEditor": "none",
+  "workbench.sideBar.location": "left",
 
   "editor.minimap.enabled": false,
   "editor.fontFamily": "JetBrains Mono, Fira Code, Consolas, monospace",

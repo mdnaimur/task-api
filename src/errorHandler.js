@@ -6,31 +6,27 @@
  */
 
 const { AppError } = require("./errors");
+const { sendJson } = require("./utils/http");
 
 function errorHandler(error, res) {
   if (error instanceof AppError) {
-    res.statusCode = error.statusCode;
-
-    res.setHeader("Content-Type", "application/json");
-    res.end(
-      JSON.stringify({
-        error: error.message,
-      }),
-    );
+    //    if (error.isOperational)
+    sendJson(res, error.statusCode, {
+      error: error.message,
+    });
     return;
   }
 
-  console.error(error);
+  // console.error(error);
+      logger.error("Unexpected error", {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+    });
 
-  res.statusCode = 500;
-
-  res.setHeader("Content-Type", "application/json");
-
-  res.end(
-    JSON.stringify({
-      error: "Internal Server Error",
-    }),
-  );
+  sendJson(res, 500, {
+    error: "Internal Server Error",
+  });
 }
 
 module.exports = errorHandler;

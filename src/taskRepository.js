@@ -64,7 +64,7 @@ async function update(id, changes) {
 }
 
 async function remove(id) {
-  const tasks = readTasks();
+  const tasks = await readTasks();
 
   const index = tasks.findIndex((task) => task.id === id);
   if (index === -1) {

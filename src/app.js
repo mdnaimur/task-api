@@ -15,6 +15,8 @@ const createTaskController = require("./controllers/taskController");
 const registerRoutes = require("./routes");
 const { addRoute } = require("./router");
 
+require("./events/taskListeners");
+
 const taskService = createTaskService(taskRepository);
 const taskController = createTaskController(taskService);
 

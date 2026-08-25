@@ -14,8 +14,24 @@ const { validateTask, validateTaskUpdate } = require("./validators");
 const { readTasks, writeTasks } = require("./taskRepository");
 const errorHandler = require("./errorHandler");
 const { sendJson } = require("./utils/http");
+const logger = require("./utils/logger");
 
 async function requestHandler(req, res) {
+  //FIX: for count time
+  const start = Date.now();
+
+  res.on("finish", () => {
+    const duration = Date.now() - start;
+
+    logger.info("HTTP request", {
+      method: req.method,
+      url: req.url,
+      statusCode: res.statusCode,
+      duration: `${duration}ms`,
+    });
+  });
+
+  /// main handler start
   try {
     const url = new URL(req.url, `http://${req.headers.host}`);
 

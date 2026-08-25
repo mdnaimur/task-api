@@ -5,6 +5,8 @@
  * Date: 23/08/2026
  */
 
+const taskEvents = require("../events/taskEvents");
+
 function createTaskService(taskRepository) {
   async function createTask(data) {
     const task = {
@@ -13,7 +15,10 @@ function createTaskService(taskRepository) {
       completed: data.completed ?? false,
     };
 
-    return taskRepository.create(task);
+    const createdTask = await taskRepository.create(task);
+
+    taskEvents.emit("task.created", createdTask);
+    return createdTask;
   }
 
   async function getTasks() {
@@ -35,11 +40,24 @@ function createTaskService(taskRepository) {
       changes.completed = data.completed;
     }
 
-    return taskRepository.update(id, changes);
+    const updatedTask = taskRepository.update(id, changes);
+
+    if (updatedTask) {
+      taskEvents.emit("task.updated", updatedTask);
+    }
+
+    return updatedTask;
   }
 
   async function deleteTask(id) {
-    return taskRepository.remove(id);
+    const deleted = taskRepository.remove(id);
+    if (deleted) {
+      taskEvents.emit("task.deleted", {
+        id,
+      });
+    }
+
+    return deleted;
   }
 
   return {

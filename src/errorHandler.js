@@ -7,6 +7,7 @@
 
 const { AppError } = require("./errors");
 const { sendJson } = require("./utils/http");
+const logger  = require("./utils/logger");
 
 function errorHandler(error, res) {
   if (error instanceof AppError) {
@@ -18,11 +19,11 @@ function errorHandler(error, res) {
   }
 
   // console.error(error);
-      logger.error("Unexpected error", {
-        name: error.name,
-        message: error.message,
-        stack: error.stack
-    });
+  logger.error("Unexpected error", {
+    name: error.name,
+    message: error.message,
+    stack: error.stack,
+  });
 
   sendJson(res, 500, {
     error: "Internal Server Error",

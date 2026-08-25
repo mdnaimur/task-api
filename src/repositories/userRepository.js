@@ -8,7 +8,9 @@
 const fs = require("node:fs/promises");
 const path = require("node:path");
 
-const filePath = path.join(process.cwd(), "data", "users.json");
+// const filePath = path.join(process.cwd(), "data", "users.json");
+// const filePath = path.join(process.cwd(), "..", "data", "users.json");
+const filePath = path.join(__dirname, "..","..", "data", "users.json");
 
 async function findByEmail(email) {
   const data = await fs.readFile(filePath, "utf-8");

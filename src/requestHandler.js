@@ -11,7 +11,7 @@ const { addRoute, findRoute, findPath } = require("./router");
 const parseJsonBody = require("./bodyParser");
 
 const { validateTask, validateTaskUpdate } = require("./validators");
-const { readTasks, writeTasks } = require("./taskRepository");
+const { readTasks, writeTasks } = require("./repositories/taskRepository");
 const errorHandler = require("./errorHandler");
 const { sendJson } = require("./utils/http");
 const logger = require("./utils/logger");

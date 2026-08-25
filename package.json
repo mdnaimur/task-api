@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Task Management Rest API",
   "main": "src/server.js",
+  "type": "module",
   "scripts": {
     "start": "node --env-file=.env src/server.js",
     "dev": "node --watch --env-file=.env src/server.js",
@@ -10,5 +11,8 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "jose": "^6.2.10"
+  }
 }

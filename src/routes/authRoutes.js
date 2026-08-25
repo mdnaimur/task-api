@@ -17,6 +17,7 @@
 
 function registerAuthRoute(addRoute, { authController }) {
   addRoute("POST", "/auth/register", authController.register);
+  addRoute("POST", "/auth/login", authController.login);
 }
 
 // module.exports = authRoutes;

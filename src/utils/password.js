@@ -21,6 +21,25 @@ function hashPassword(password) {
   });
 }
 
+function verifyPassword(password, storeHash) {
+  return new Promise((resolve, reject) => {
+    const [salt, key] = storeHash.split(":");
+
+    crypto.scrypt(password, salt, 64, (error, derivedKey) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+
+      const storeKey = Buffer.from(key, "hex");
+      resolve(
+        storeKey.length === derivedKey.length &&
+          crypto.timingSafeEqual(storeKey, derivedKey),
+      );
+    });
+  });
+}
 module.exports = {
   hashPassword,
+  verifyPassword,
 };

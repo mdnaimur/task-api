@@ -1,1 +1,10 @@
-[]
+[
+  {
+    "id": "24de3ce0-ad7a-4f89-b19c-0feed695c77c",
+    "email": "test@example.com"
+  },
+  {
+    "id": "f5c2538a-ee4a-45fb-ac80-40f5ebe4b779",
+    "email": "user1@example.com"
+  }
+]

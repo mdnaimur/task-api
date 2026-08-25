@@ -5,20 +5,20 @@
  * Date: 23/08/2026
  */
 
-const {
-  createTaskController,
-  deleteTaskController,
-  getTaskCotroller,
-  updateTaskController,
-  getTasksController,
-} = require("../controllers/taskController");
+// const {
+//   createTaskController,
+//   deleteTaskController,
+//   getTaskCotroller,
+//   updateTaskController,
+//   getTasksController,
+// } = require("../controllers/taskController");
 
-function registerTaskRoute(addRoute) {
-  addRoute("POST", "/tasks", createTaskController);
-  addRoute("GET", "/tasks", getTasksController);
-  addRoute("GET", "/tasks/:id", getTaskCotroller);
-  addRoute("PATCH", "/tasks/:id", updateTaskController);
-  addRoute("DELETE", "/tasks/:id", deleteTaskController);
+function registerTaskRoute(addRoute, { taskController  }) {
+  addRoute("POST", "/tasks", taskController.createTaskController);
+  addRoute("GET", "/tasks", taskController.getTasksController);
+  addRoute("GET", "/tasks/:id", taskController.getTaskCotroller);
+  addRoute("PATCH", "/tasks/:id", taskController.updateTaskController);
+  addRoute("DELETE", "/tasks/:id", taskController.deleteTaskController);
 }
 
 module.exports = registerTaskRoute;

@@ -37,10 +37,23 @@ async function requestHandler(req, res) {
 
     const route = findRoute(req.method, url.pathname);
     if (route) {
-      await route.handler(req, res, {
+      // for (const handler of route.handlers) {
+      //   await route.handler(req, res, {
+      //     params: route.params,
+      //     query: url.searchParams,
+      //   });
+      // }
+      // return;
+
+      const context = {
         params: route.params,
         query: url.searchParams,
-      });
+      };
+
+      for (const handler of route.handlers) {
+        await handler(req, res, context);
+      }
+
       return;
     }
 

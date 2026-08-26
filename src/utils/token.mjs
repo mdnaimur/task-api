@@ -5,7 +5,7 @@
  * Date: 25/08/2026
  */
 
-import { SignJWT } from "jose";
+import { SignJWT, jwtVerify } from "jose";
 
 const secret = process.env.JWT_SECRET;
 
@@ -22,4 +22,9 @@ export async function createToken(userId) {
     .setIssuedAt()
     .setExpirationTime("1h")
     .sign(secretKey);
+}
+
+export async function verifyToken(token) {
+  const { payload } = await jwtVerify(token, secretKey);
+  return payload;
 }

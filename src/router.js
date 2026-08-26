@@ -7,11 +7,11 @@
 
 const routes = [];
 
-function addRoute(method, path, handler) {
+function addRoute(method, path, ...handlers) {
   routes.push({
     method,
     path,
-    handler,
+    handlers,
   });
 }
 

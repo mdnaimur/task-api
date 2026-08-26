@@ -1,11 +1,12 @@
-/*
- * Title: task service
- * Description: all service get, post , update , delete opearation this file
+/**
+ * Title: Task Service
+ * Description: All task business operations
  * Author: Md Naimur Rahman
  * Date: 23/08/2026
  */
 
 const taskEvents = require("../events/taskEvents");
+const { AppError } = require("../errors");
 
 function createTaskService(taskRepository) {
   async function createTask(data, userId) {
@@ -19,26 +20,41 @@ function createTaskService(taskRepository) {
     const createdTask = await taskRepository.create(task);
 
     taskEvents.emit("task.created", createdTask);
+
     return createdTask;
   }
 
-  async function getTasks() {
-    const tasks = taskRepository.findAll();
+  async function getTasks(userId) {
+    const tasks = await taskRepository.findAll();
+
     return tasks.filter((task) => task.userId === userId);
   }
 
-  async function getTaskById(id) {
-    const task = taskRepository.findById(id);
+  async function getTaskById(id, userId) {
+    const task = await taskRepository.findById(id);
+
     if (!task) {
       return null;
     }
+
     if (task.userId !== userId) {
       throw new AppError(403, "You do not have permission to access this task");
     }
+
     return task;
   }
 
-  async function updateTask(id, data) {
+  async function updateTask(id, data, userId) {
+    const task = await taskRepository.findById(id);
+
+    if (!task) {
+      return null;
+    }
+
+    if (task.userId !== userId) {
+      throw new AppError(403, "You do not have permission to update this task");
+    }
+
     const changes = {};
 
     if (data.title !== undefined) {
@@ -49,7 +65,7 @@ function createTaskService(taskRepository) {
       changes.completed = data.completed;
     }
 
-    const updatedTask = taskRepository.update(id, changes);
+    const updatedTask = await taskRepository.update(id, changes);
 
     if (updatedTask) {
       taskEvents.emit("task.updated", updatedTask);
@@ -58,8 +74,19 @@ function createTaskService(taskRepository) {
     return updatedTask;
   }
 
-  async function deleteTask(id) {
-    const deleted = taskRepository.remove(id);
+  async function deleteTask(id, userId) {
+    const task = await taskRepository.findById(id);
+
+    if (!task) {
+      return null;
+    }
+
+    if (task.userId !== userId) {
+      throw new AppError(403, "You do not have permission to delete this task");
+    }
+
+    const deleted = await taskRepository.remove(id);
+
     if (deleted) {
       taskEvents.emit("task.deleted", {
         id,
@@ -71,8 +98,8 @@ function createTaskService(taskRepository) {
 
   return {
     createTask,
-    getTaskById,
     getTasks,
+    getTaskById,
     updateTask,
     deleteTask,
   };

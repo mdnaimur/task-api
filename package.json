@@ -12,6 +12,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "jose": "^6.2.10"
+    "dotenv": "^17.4.2",
+    "jose": "^6.2.10",
+    "pg": "^8.23.0"
   }
 }

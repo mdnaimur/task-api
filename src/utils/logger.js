@@ -35,10 +35,19 @@ function warn(message, data = {}) {
 //     log("ERROR", message, data);
 // }
 
+function logRequest({ method, url, statusCode, duration }) {
+  console.log(
+    `[${new Date().toISOString()}] ` +
+      `${method} ${url} ` +
+      `${statusCode} ${duration}ms`,
+  );
+}
+
 module.exports = {
   info,
   error,
   debug,
   log,
   warn,
+  logRequest,
 };

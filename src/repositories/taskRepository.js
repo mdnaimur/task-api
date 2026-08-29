@@ -1,83 +1,166 @@
 /*
  * Title: Task Repository
- * Description: file handle in this area
+ * Description: file handle in this area with Postgre
  * Author: Md Naimur Rahman
- * Date: 23/08/2026
+ * Date: 29/08/2026
  */
 
-const fs = require("node:fs/promises");
-const path = require("node:path");
+const pool = require("../config/database");
 
-// area to save local
-const filePath = path.join(__dirname, "..", "..", "data", "tasks.json");
+async function findAll({
+  userId,
+  completed,
+  search,
+  offset = 0,
+  limit = 20,
+} = {}) {
+  const values = [];
 
-async function readTasks() {
-  const data = await fs.readFile(filePath, "utf-8");
-  return JSON.parse(data);
+  let query = `
+    SELECT
+      id,
+      user_id,
+      title,
+      completed,
+      created_at
+    FROM tasks
+    WHERE user_id = $1
+  `;
+
+  // IMPORTANT
+  values.push(userId);
+
+  if (completed !== undefined) {
+    values.push(completed);
+
+    query += `
+      AND completed = $${values.length}
+    `;
+  }
+
+  if (search) {
+    values.push(`%${search}%`);
+
+    query += `
+      AND title ILIKE $${values.length}
+    `;
+  }
+
+  query += `
+    ORDER BY created_at DESC
+  `;
+
+  values.push(limit);
+  const limitIndex = values.length;
+
+  values.push(offset);
+  const offsetIndex = values.length;
+
+  query += `
+    LIMIT $${limitIndex}
+    OFFSET $${offsetIndex}
+  `;
+
+  console.log("QUERY:", query);
+  console.log("VALUES:", values);
+
+  const result = await pool.query(query, values);
+
+  return result.rows;
 }
-
-// async function writeTasks(tasks) {
-//   await fs.writeFile(filePath, JSON.stringify(tasks, null, 2));
-// }
-
-/**
- *
- * concurrrencty  write  problem solve
- */
-
-let writeQueue = Promise.resolve();
-
-function writeTasks(tasks) {
-  writeQueue = writeQueue.then(() =>
-    fs.writeFile(filePath, JSON.stringify(tasks, null, 2)),
-  );
-  return writeQueue;
-}
-
-async function findAll() {
-  return readTasks();
-}
-
 async function findById(id) {
-  const tasks = await readTasks();
-  return tasks.find((task) => task.id === id) || null;
+  const result = await pool.query(
+    `
+      SELECT
+        id,
+        user_id,
+        title,
+        completed,
+        created_at
+      FROM tasks
+      WHERE id = $1
+    `,
+    [id],
+  );
+
+  return result.rows[0] || null;
 }
 
 async function create(task) {
-  const tasks = await readTasks();
+  const result = await pool.query(
+    `
+      INSERT INTO tasks (
+        id,
+        user_id,
+        title,
+        completed
+      )
+      VALUES ($1, $2, $3, $4)
+      RETURNING
+        id,
+        user_id,
+        title,
+        completed,
+        created_at
+    `,
+    [task.id, task.userId, task.title, task.completed],
+  );
 
-  tasks.push(task);
-  await writeTasks(tasks);
-  return task;
+  return result.rows[0];
 }
 
 async function update(id, changes) {
-  const tasks = await readTasks();
-  const task = tasks.find((task) => task.id === id);
+  const fields = [];
+  const values = [];
 
-  if (!task) {
-    return null;
+  if (changes.title !== undefined) {
+    values.push(changes.title);
+    fields.push(`title = $${values.length}`);
   }
-  Object.assign(task, changes);
-  await writeTasks(tasks);
-  return task;
+
+  if (changes.completed !== undefined) {
+    values.push(changes.completed);
+    fields.push(`completed = $${values.length}`);
+  }
+
+  if (fields.length === 0) {
+    return findById(id);
+  }
+
+  values.push(id);
+
+  const result = await pool.query(
+    `
+      UPDATE tasks
+      SET ${fields.join(", ")}
+      WHERE id = $${values.length}
+      RETURNING
+        id,
+        user_id,
+        title,
+        completed,
+        created_at
+    `,
+    values,
+  );
+
+  return result.rows[0] || null;
 }
 
 async function remove(id) {
-  const tasks = await readTasks();
+  const result = await pool.query(
+    `
+      DELETE FROM tasks
+      WHERE id = $1
+      RETURNING id
+    `,
+    [id],
+  );
 
-  const index = tasks.findIndex((task) => task.id === id);
-  if (index === -1) {
-    return false;
-  }
-  tasks.splice(index, 1);
-  await writeTasks(tasks);
-  return true;
+  return result.rowCount > 0;
 }
 
 module.exports = {
-  readTasks,
-  writeTasks,
   findAll,
   findById,
   create,

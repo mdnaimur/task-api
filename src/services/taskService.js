@@ -22,9 +22,36 @@ function createTaskService(taskRepository) {
     return createdTask;
   }
 
-  async function getTasks() {
-    const tasks = taskRepository.findAll();
-    return tasks.filter((task) => task.userId === userId);
+  // async function getTasks() {
+  //   const tasks = await taskRepository.findAll();
+  //   return tasks;
+  //   // return tasks.filter((task) => task.userId === userId);
+  // }
+
+  async function getTasks({ page = 0, limit = 20 } = {}) {
+    const tasks = await taskRepository.findAll();
+
+    const total = tasks.length;
+    const offset = (page - 1) * limit;
+
+    const data = tasks.slice(offset, offset + limit);
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNext: page < totalPages,
+      },
+    };
+
+    // return tasks.slice(offset, offset + limit);
+    // return tasks;
+    // return tasks.filter((task) => task.userId === userId);
   }
 
   async function getTaskById(id) {

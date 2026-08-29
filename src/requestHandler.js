@@ -34,8 +34,10 @@ async function requestHandler(req, res) {
   /// main handler start
   try {
     const url = new URL(req.url, `http://${req.headers.host}`);
+    // console.log("main hanlder url", url);
 
     const route = findRoute(req.method, url.pathname);
+    console.log("MATCHED ROUTE: ⚠️", route);
     if (route) {
       // for (const handler of route.handlers) {
       //   await route.handler(req, res, {
@@ -69,6 +71,13 @@ async function requestHandler(req, res) {
     });
   } catch (error) {
     errorHandler(error, res);
+  } finally {
+    logger.logRequest({
+      method: req.method,
+      url: req.url,
+      statusCode: res.statusCode,
+      duration: Date.now() - start,
+    });
   }
 }
 module.exports = requestHandler;

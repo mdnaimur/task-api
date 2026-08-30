@@ -8,3 +8,9 @@
 
 
 main - dev - jwt-auth
+
+main -- no npm---only node core
+
+dev-with-npm
+
+dev-with-express

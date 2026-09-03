@@ -50,3 +50,22 @@ router.post("/login", async (req, res, next) => {
     next(error);
   }
 });
+
+router.get("/me", authenticate, async (req, res, next) => {
+  try {
+    const user = await findUserById(req.user.id);
+
+    if (!user) {
+      throw new AppError("User not found", 404, "USER_NOT_FOUND");
+    }
+
+    res.json({
+      data: {
+        id: user.id,
+        email: user.email,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
